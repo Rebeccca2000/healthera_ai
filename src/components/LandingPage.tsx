@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  ArrowRight, 
-  ChevronDown, 
+  ArrowRight,  
   Shield, 
   Clock, 
-  DollarSign, 
-  User,
   BarChart,
   X 
 } from 'lucide-react';
 
-interface LandingPageProps {}
+interface LandingPageProps {
+  // If truly no props needed, you can remove the interface entirely
+}
 
 const LandingPage: React.FC<LandingPageProps> = () => {
   const [activeTab, setActiveTab] = useState('lender');

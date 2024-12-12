@@ -1,7 +1,7 @@
 "use client";  // This must be the first line
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, FileText, CheckCircle, BarChart, LogOut, DollarSign, Users, Globe, TrendingUp, CircleDollarSign } from 'lucide-react';
+import { Home, FileText, CheckCircle, BarChart, DollarSign, Globe, TrendingUp, CircleDollarSign } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import LoanDetailsModal from './LoanDetailsModal';  // Add this at the top
 import { LoanRequest } from './types';  // Adjust the path as needed
@@ -9,7 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
-  const [activeLoanStep, setActiveLoanStep] = useState('loan-info');
   const [selectedLoan, setSelectedLoan] = useState<LoanRequest | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);

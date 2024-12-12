@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d out"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.1",
@@ -43,7 +45,7 @@
     "next-auth": "^4.24.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "recharts": "^2.14.1",
+    "recharts": "^2.15.0",
     "tailwind-merge": "^2.5.5"
   },
   "devDependencies": {

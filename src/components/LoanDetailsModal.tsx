@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { X, Home, Package, Shield, DollarSign, AlertCircle  } from 'lucide-react';
 import { LoanRequest } from './types';
-
+interface LoanDetailsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  loanRequest: LoanRequest | null;
+}
 const LoanDetailsModal = ({ isOpen, onClose, loanRequest }: LoanDetailsModalProps) => {
   const [activeTab, setActiveTab] = useState('loan');
   
@@ -71,7 +75,7 @@ const LoanDetailsModal = ({ isOpen, onClose, loanRequest }: LoanDetailsModalProp
             <p className="text-sm text-gray-300">Value: ${quickAssessment.propertyStatus.propertyValue.toLocaleString()}</p>
             <p className="text-xs text-green-400 mt-2">Verified</p>
           </div>
-					
+
           <div className="bg-gray-700 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-semibold">Credit Assessment</h3>
