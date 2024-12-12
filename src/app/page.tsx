@@ -1,5 +1,8 @@
-import Dashboard from '@/components/Dashboard';
+// src/app/page.tsx
+'use client';
+
+import LandingPage from '@/components/LandingPage';
 
 export default function Home() {
-  return <Dashboard />;
+  return <LandingPage />;
 }
