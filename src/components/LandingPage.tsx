@@ -76,7 +76,7 @@ const LandingPage: React.FC<LandingPageProps> = () => {
           Empowering healthcare providers with fast, intelligent financing solutions powered by AI
         </p>
         <div className="flex justify-center gap-4">
-          <Link href="/healthera_ai/dashboard">
+          <Link href="/dashboard">
             <button className="bg-purple-600 px-6 py-3 rounded-lg text-white hover:bg-purple-700 transition-colors flex items-center">
               Get Started <ArrowRight className="ml-2" />
             </button>

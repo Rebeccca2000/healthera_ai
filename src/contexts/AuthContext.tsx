@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     if (email === TEST_CREDENTIALS.email && password === TEST_CREDENTIALS.password) {
       // Set cookie with a specific expiry and secure flags
-      document.cookie = `auth=true; path=/healthera_ai; max-age=86400; samesite=strict`;
+      document.cookie = `auth=true; path=/; max-age=86400; samesite=strict`;
       setIsAuthenticated(true);
       router.push('/dashboard');
     } else {
