@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(false);
       
       // Force a hard navigation and clear any cached state
-      window.location.href = '/';
+      window.location.href = '/healthera_ai';
       sessionStorage.clear();
       localStorage.clear();
     } catch (error) {
