@@ -81,7 +81,7 @@ const LandingPage: React.FC<LandingPageProps> = () => {
               Get Started <ArrowRight className="ml-2" />
             </button>
           </Link>
-          <Link href="/healthera_ai/about">
+          <Link href="/about">
             <button className="border border-purple-600 px-6 py-3 rounded-lg text-purple-500 hover:bg-purple-600/10 transition-colors">
               Learn More
             </button>
