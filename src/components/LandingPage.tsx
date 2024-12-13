@@ -27,7 +27,7 @@ const LandingPage: React.FC<LandingPageProps> = () => {
       await login(email, password);
       setShowLoginModal(false);
       // If you're using router for navigation after login
-      router.push('/healthera_ai/dashboard');
+      router.push('/dashboard');
     } catch (error) {
       // Add an alert for now - you might want to show this in the UI more elegantly
       alert('Invalid credentials!');

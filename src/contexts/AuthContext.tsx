@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Set cookie with a specific expiry and secure flags
       document.cookie = `auth=true; path=/healthera_ai; max-age=86400; samesite=strict`;
       setIsAuthenticated(true);
-      router.push('/healthera_ai/dashboard');
+      router.push('/dashboard');
     } else {
       throw new Error('Invalid credentials');
     }
