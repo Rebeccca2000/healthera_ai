@@ -34,9 +34,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     if (email === TEST_CREDENTIALS.email && password === TEST_CREDENTIALS.password) {
       // Set cookie with a specific expiry and secure flags
-      document.cookie = `auth=true; path=/; max-age=86400; samesite=strict`;
+      document.cookie = `auth=true; path=/healthera_ai; max-age=86400; samesite=strict`;
       setIsAuthenticated(true);
-      router.push('/dashboard');
+      router.push('/healthera_ai/dashboard');
     } else {
       throw new Error('Invalid credentials');
     }
@@ -45,11 +45,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     try {
       // Clear the auth cookie with proper flags
-      document.cookie = 'auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=strict';
+      document.cookie = 'auth=; path=/healthera_ai; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=strict';
       setIsAuthenticated(false);
       
       // Force a hard navigation and clear any cached state
-      window.location.href = '/';
+      window.location.href = '/healthera_ai';
       sessionStorage.clear();
       localStorage.clear();
     } catch (error) {

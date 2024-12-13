@@ -6,7 +6,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import LoanDetailsModal from './LoanDetailsModal';  // Add this at the top
 import { LoanRequest } from './types';  // Adjust the path as needed
 import { useAuth } from '@/contexts/AuthContext';
-
+import Image from 'next/image';
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [selectedLoan, setSelectedLoan] = useState<LoanRequest | null>(null);
@@ -209,16 +209,18 @@ const Dashboard = () => {
 						onClick={toggleProfileMenu}
 						className="flex items-center space-x-3 bg-gray-800 p-2 rounded-lg hover:bg-gray-700"
 					>
-						<img 
-							src="/api/placeholder/40/40" 
-							alt="Profile" 
-							className="w-8 h-8 rounded-full"
+						<Image 
+							src="/healthera_ai/api/placeholder/40/40"
+							alt="Profile"
+							width={40}
+							height={40}
+							className="rounded-full"
 						/>
 						<span className="text-gray-200">John Doe</span>
 					</button>
 
 					{isProfileMenuOpen && (
-						<div className="absolute right-0 mt-2 w-64 bg-gray-800 rounded-lg shadow-lg py-2 z-50">
+						<div className="absolute right-0 mst-2 w-64 bg-gray-800 rounded-lg shadow-lg py-2 z-50">
 							<div className="px-4 py-3 border-b border-gray-700">
 								<p className="text-sm text-gray-400">Signed in as</p>
 								<p className="font-medium">john.doe@healthera.ai</p>

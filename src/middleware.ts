@@ -5,12 +5,12 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
 	const authCookie = request.cookies.get('auth')?.value;
   // If trying to access dashboard without auth cookie, redirect to home
-  if (!authCookie && request.nextUrl.pathname.startsWith('/dashboard')) {
+  if (!authCookie && request.nextUrl.pathname.startsWith('/healthera_ai/dashboard')) {
     return NextResponse.redirect(new URL('/', request.url));
   }
   
   // If accessing home with auth cookie, allow it
-  if (authCookie && request.nextUrl.pathname === '/') {
+  if (authCookie && request.nextUrl.pathname === '/healthera_ai') {
     return NextResponse.next();
   }
   
@@ -18,5 +18,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/']
+  matcher: ['/healthera_ai/dashboard/:path*', '/healthera_ai']
 };

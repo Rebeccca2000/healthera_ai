@@ -2,17 +2,21 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   output: 'export',
+  // Make sure this exactly matches your GitHub repository name
   basePath: '/healthera_ai',
   images: {
     unoptimized: true,
   },
-  eslint: {
-    // This will ignore ESLint errors during builds
-    ignoreDuringBuilds: true,
-  },
+  // Add these two important configurations
+  assetPrefix: '/healthera_ai/',
+  trailingSlash: true,
+  // Disable the experimental app directory since we're deploying to GitHub Pages
+  reactStrictMode: true,
   typescript: {
-    // This will ignore TypeScript errors during builds
     ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   }
 }
 
