@@ -1,5 +1,5 @@
 // src/contexts/AuthContext.tsx
-'use client';  
+'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -23,7 +23,6 @@ const TEST_CREDENTIALS = {
   }
 };
 
-// Helper function to check if auth cookie exists
 const checkAuthCookie = (): { isAuthenticated: boolean; userRole: 'lender' | 'applicant' | null } => {
   const cookies = document.cookie.split(';').reduce((acc, cookie) => {
     const [key, value] = cookie.trim().split('=');
@@ -86,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
