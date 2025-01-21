@@ -1,12 +1,71 @@
 "use client";  // This must be the first line
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, FileText, CheckCircle, BarChart, DollarSign, Globe, TrendingUp, CircleDollarSign } from 'lucide-react';
+import { Home, FileText, CheckCircle, BarChart, DollarSign, Globe, TrendingUp, CircleDollarSign, Coins } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import LoanDetailsModal from './LoanDetailsModal';  // Add this at the top
 import { LoanRequest } from './types';  // Adjust the path as needed
 import { useAuth } from '@/contexts/AuthContext';
 import Image from 'next/image';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Package } from 'lucide-react';
+import NFTDetailsCard from './NFTDetailsCard';
+import TokenTreasury from './TokenTreasury';
+
+// Add this component definition before the Dashboard component
+const NFTViewerDialog = ({ requestId }: { requestId: number }) => {
+  // Mock NFT data mapped by request ID
+  const nftsByRequest = {
+    3669: [{
+      name: "Dental X-Ray Machine",
+      tokenId: "HER-123456",
+      status: "Available",
+      manufacturer: "DentalTech Pro",
+      serialNumber: "DT-2024-789",
+      purchaseDate: "2024-01-15",
+      verifier: "MedEquip Certification",
+      currentValue: "25,000",
+      lastVerified: "2024-01-15",
+      image: "/api/placeholder/400/300",
+      photos: ["/api/placeholder/200/200", "/api/placeholder/200/200"],
+      riskScore: "85",
+      history: [
+        { action: "NFT Created", date: "2024-01-15", type: "Creation" },
+        { action: "Value Verified", date: "2024-01-15", type: "Verification" }
+      ]
+    }]
+  };
+
+  const applicantNFTs = nftsByRequest[requestId] || [];
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button className="bg-purple-600 px-3 py-1 rounded text-sm hover:bg-purple-700">
+          <Package className="w-4 h-4 mr-2 inline" />
+          View NFTs ({applicantNFTs.length})
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl bg-gray-800 border-gray-700">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold text-white">
+            Applicant's Equipment NFTs
+          </DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 max-h-[70vh] overflow-y-auto p-4">
+          {applicantNFTs.map((nft, index) => (
+            <NFTDetailsCard 
+              key={index} 
+              nft={nft} 
+              viewMode="lender"
+            />
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [selectedLoan, setSelectedLoan] = useState<LoanRequest | null>(null);
@@ -49,7 +108,7 @@ const Dashboard = () => {
     // Implement rejection logic
     console.log(`Rejecting loan ${id}`);
   };
-
+  
 	const handleLogout = (e: React.MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -185,7 +244,7 @@ const Dashboard = () => {
             { id: 'home', icon: Home, label: 'Home' },
             { id: 'loan-requests', icon: FileText, label: 'Loan Requests' },
             { id: 'approved-requests', icon: CheckCircle, label: 'Approved Requests' },
-            { id: 'deployed-assets', icon: BarChart, label: 'Deployed Assets/Funds' }
+            { id: 'token-treasury', icon: Coins, label: 'Available Funds' }
           ].map(({ id, icon: Icon, label }) => (
             <button
               key={id}
@@ -275,12 +334,12 @@ const Dashboard = () => {
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-bold">
             {activeTab === 'approved-requests' ? 'Approved Loan Requests' : 
-             activeTab === 'home' ? 'Financier Home' : 
-             activeTab === 'loan-requests' ? 'Loan Requests' : 
-             'Deployed Assets/Funds'}
+            activeTab === 'home' ? 'Financier Home' : 
+            activeTab === 'loan-requests' ? 'Loan Requests' : 
+            activeTab === 'token-treasury' ? 'Available Funds':'' 
+            }
           </h2>
-
-      	</div>
+        </div>
 
         {activeTab === 'home' && (
           <>
@@ -377,7 +436,7 @@ const Dashboard = () => {
 									<th className="pb-4">DURATION</th>
 									<th className="pb-4">RISK SCORE</th>
 									<th className="pb-4">STATUS</th>
-									<th className="pb-4">DOCUMENTS</th>
+									<th className="pb-4">APPLICANT'S NFTs</th>
 									<th className="pb-4">DETAILS</th>
 									<th className="pb-4">ACTIONS</th>
 								</tr>
@@ -400,19 +459,9 @@ const Dashboard = () => {
 												{request.status}
 											</span>
 										</td>
-										<td>
-											<div className="flex space-x-2">
-												<span className={request.documents.id ? "text-green-400" : "text-red-400"}>
-													{request.documents.id ? "✓" : "✗"} ID
-												</span>
-												<span className={request.documents.bank ? "text-green-400" : "text-red-400"}>
-													{request.documents.bank ? "✓" : "✗"} Bank
-												</span>
-												<span className={request.documents.medical ? "text-green-400" : "text-red-400"}>
-													{request.documents.medical ? "✓" : "✗"} Medical
-												</span>
-											</div>
-										</td>
+                    <td>
+                      <NFTViewerDialog requestId={request.id} />
+                    </td>
 										<td>
 											<button
 												onClick={() => handleViewDetails(request)}
@@ -496,6 +545,7 @@ const Dashboard = () => {
             </table>
           </div>
         )}
+        {activeTab === 'token-treasury' && <TokenTreasury />}
       </div>
 			<LoanDetailsModal
       isOpen={isModalOpen}

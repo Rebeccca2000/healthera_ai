@@ -1,13 +1,18 @@
 // src/components/ApplicantDashboard.tsx
-"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, FileText, Package, DollarSign, Clock, Globe } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { Home, FileText, Package, DollarSign, Clock, Globe, Wallet, Plus, CreditCard} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';  // Add this import at the top
 import Image from 'next/image';
-import EquipmentLoanFlow from '@/components/EquipmentLoanFlow';
+import ApplicantLoansManager from '@/components/ApplicantLoansManager';
+import NFTMintingFlow from '@/components/NFTMintingFlow';
+import LoanApplicationFlow from '@/components/LoanApplicationFlow';
+import NFTGallery from '@/components/NFTGallery';
 
 const ApplicantDashboard = () => {
+  const router = useRouter();  // Add this line before other state declarations
   const [activeTab, setActiveTab] = useState('home');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const { logout } = useAuth();
@@ -31,8 +36,19 @@ const ApplicantDashboard = () => {
     nextPayment: "$180",
     paymentDate: "Feb 15, 2024",
     equipmentValue: "$4,500",
+    nftCount: "2",
+    assetValue: "$8,500",  // Total value of NFTs
     creditScore: "85"
   };
+
+  const navigationItems = [
+    { id: 'home', icon: Home, label: 'Home', path: '/applicant-dashboard' },
+    { id: 'nfts', icon: Package, label: 'My NFTs', path: '/applicant-dashboard/nfts' },
+    { id: 'loans', icon: FileText, label: 'My Loans', path: '/applicant-dashboard/loans' },
+    { id: 'mint-nft', icon: Plus, label: 'Mint New NFTs', path: '/applicant-dashboard/mint-nft' },
+    { id: 'new-loan', icon: DollarSign, label: 'New Loan Application', path: '/applicant-dashboard/new-loan' },
+    { id: 'payments', icon: CreditCard, label: 'Payments', path: '/applicant-dashboard/payments' }
+  ];
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 flex">
@@ -57,22 +73,17 @@ const ApplicantDashboard = () => {
         </div>
 
         <nav className="space-y-2">
-          {[
-            { id: 'home', icon: Home, label: 'Home' },
-            { id: 'my-loans', icon: FileText, label: 'My Loans' },
-            { id: 'new-application', icon: Package, label: 'New Application' },
-            { id: 'payments', icon: DollarSign, label: 'Payments' }
-          ].map(({ id, icon: Icon, label }) => (
+          {navigationItems.map(({ id, icon: Icon, label }) => (
             <button
-              key={id}
-              onClick={() => setActiveTab(id)}
-              className={`w-full flex items-center space-x-3 p-3 rounded-lg ${
-                activeTab === id ? 'bg-purple-600' : 'hover:bg-gray-700'
-              }`}
-            >
-              <Icon className="h-5 w-5" />
-              <span>{label}</span>
-            </button>
+            key={id}
+            onClick={() => setActiveTab(id)}
+            className={`w-full flex items-center space-x-3 p-3 rounded-lg ${
+              activeTab === id ? 'bg-purple-600' : 'hover:bg-gray-700'
+            }`}
+          >
+            <Icon className="h-5 w-5" />
+            <span>{label}</span>
+          </button>
           ))}
         </nav>
       </div>
@@ -81,10 +92,12 @@ const ApplicantDashboard = () => {
       <div className="flex-1 p-6">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-bold">
-            {activeTab === 'home' ? 'Welcome Back' :
-             activeTab === 'my-loans' ? 'My Loans' :
-             activeTab === 'new-application' ? 'New Loan Application' :
-             'Payments'}
+          {activeTab === 'home' ? 'Welcome Back' :
+            activeTab === 'nfts' ? 'My NFTs' :
+            activeTab === 'loans' ? 'My Loans' :
+            activeTab === 'mint-nft' ? 'Mint New NFTs' :
+            activeTab === 'new-loan' ? 'New Loan Application' :
+            'Payments'}
           </h2>
 
           {/* Profile Menu */}
@@ -126,6 +139,7 @@ const ApplicantDashboard = () => {
               { title: 'Next Payment', value: metrics.nextPayment, icon: Clock },
               { title: 'Payment Due', value: metrics.paymentDate, icon: Globe },
               { title: 'Equipment Value', value: metrics.equipmentValue, icon: Package },
+              { title: 'NFT Assets', value: metrics.nftCount, icon: Wallet },
               { title: 'Credit Score', value: metrics.creditScore, icon: DollarSign }
             ].map((metric, index) => (
               <Card key={index} className="bg-gray-800 border-gray-700">
@@ -141,11 +155,98 @@ const ApplicantDashboard = () => {
           </div>
         )}
 
-        {activeTab === 'new-application' && (
-          <EquipmentLoanFlow />
+        {activeTab === 'mint-nft' && (
+          <NFTMintingFlow />
         )}
 
-        {/* Additional tab content would go here */}
+        {activeTab === 'new-loan' && (
+          <LoanApplicationFlow />
+        )}
+
+        {activeTab === 'loans' && (
+          <div className="w-full">
+            <ApplicantLoansManager />
+          </div>
+        )}
+        {activeTab === 'nfts' && <NFTGallery />}
+
+        {activeTab === 'payments' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="bg-gray-800 border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Next Payment</span>
+                  <Clock className="h-5 w-5 text-purple-400" />
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-3xl font-bold">{metrics.nextPayment}</p>
+                    <p className="text-sm text-gray-400">Due on {metrics.paymentDate}</p>
+                  </div>
+                  <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
+                    Make Payment
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gray-800 border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Payment History</span>
+                  <FileText className="h-5 w-5 text-purple-400" />
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {[
+                    { date: 'Jan 15, 2025', amount: '$180', status: 'Paid' },
+                    { date: 'Dec 15, 2024', amount: '$180', status: 'Paid' },
+                    { date: 'Nov 15, 2024', amount: '$180', status: 'Paid' },
+                  ].map((payment, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-gray-700 rounded-lg">
+                      <div>
+                        <p className="font-medium">{payment.date}</p>
+                        <p className="text-sm text-gray-400">{payment.amount}</p>
+                      </div>
+                      <Badge className="bg-green-600">{payment.status}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gray-800 border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Payment Methods</span>
+                  <DollarSign className="h-5 w-5 text-purple-400" />
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="p-3 bg-gray-700 rounded-lg flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+                        <DollarSign className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Bank Account</p>
+                        <p className="text-sm text-gray-400">****1234</p>
+                      </div>
+                    </div>
+                    <Badge>Default</Badge>
+                  </div>
+                  <button className="w-full bg-gray-700 text-white py-2 rounded-lg hover:bg-gray-600">
+                    Add Payment Method
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -3,15 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
-interface AuthContextType {
-  isAuthenticated: boolean;
-  userRole: 'lender' | 'applicant' | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
+// Demo credentials for development
 const TEST_CREDENTIALS = {
   lender: {
     email: 'lender@healthera.ai',
@@ -23,73 +15,194 @@ const TEST_CREDENTIALS = {
   }
 };
 
-const checkAuthCookie = (): { isAuthenticated: boolean; userRole: 'lender' | 'applicant' | null } => {
-  const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-    const [key, value] = cookie.trim().split('=');
-    acc[key] = value;
-    return acc;
-  }, {} as { [key: string]: string });
+interface User {
+  id: string;
+  email: string;
+  userType: 'lender' | 'applicant';
+}
 
-  return {
-    isAuthenticated: cookies.auth === 'true',
-    userRole: cookies.userRole as 'lender' | 'applicant' | null
-  };
-};
+interface AuthContextType {
+  isAuthenticated: boolean;
+  userRole: string | null;
+  user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState<'lender' | 'applicant' | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
 
+  // Function to check if we're in development mode
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  // Initialize auth state from localStorage
   useEffect(() => {
-    const { isAuthenticated: authStatus, userRole: role } = checkAuthCookie();
-    setIsAuthenticated(authStatus);
-    setUserRole(role);
+    const storedAuth = localStorage.getItem('isAuthenticated');
+    const storedRole = localStorage.getItem('userRole');
+    const storedUser = localStorage.getItem('user');
+    
+    if (storedAuth === 'true' && storedRole) {
+      setIsAuthenticated(true);
+      setUserRole(storedRole);
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    }
   }, []);
 
   const login = async (email: string, password: string) => {
-    if (email === TEST_CREDENTIALS.lender.email && password === TEST_CREDENTIALS.lender.password) {
-      document.cookie = `auth=true; path=/; max-age=86400; samesite=strict`;
-      document.cookie = `userRole=lender; path=/; max-age=86400; samesite=strict`;
+    try {
+      // For development, use test credentials
+      if (isDevelopment) {
+        if (email === TEST_CREDENTIALS.lender.email && 
+            password === TEST_CREDENTIALS.lender.password) {
+          setIsAuthenticated(true);
+          setUserRole('lender');
+          const demoUser = {
+            id: '1',
+            email: TEST_CREDENTIALS.lender.email,
+            userType: 'lender' as const
+          };
+          setUser(demoUser);
+          localStorage.setItem('isAuthenticated', 'true');
+          localStorage.setItem('userRole', 'lender');
+          localStorage.setItem('user', JSON.stringify(demoUser));
+          router.push('/lender-dashboard');
+          return;
+        } 
+        
+        if (email === TEST_CREDENTIALS.applicant.email && 
+            password === TEST_CREDENTIALS.applicant.password) {
+          setIsAuthenticated(true);
+          setUserRole('applicant');
+          const demoUser = {
+            id: '2',
+            email: TEST_CREDENTIALS.applicant.email,
+            userType: 'applicant' as const
+          };
+          setUser(demoUser);
+          localStorage.setItem('isAuthenticated', 'true');
+          localStorage.setItem('userRole', 'applicant');
+          localStorage.setItem('user', JSON.stringify(demoUser));
+          router.push('/applicant-dashboard');
+          return;
+        }
+      }
+
+      // For production, use the API
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Login failed');
+      }
+
+      const data = await response.json();
+      
       setIsAuthenticated(true);
-      setUserRole('lender');
-      router.push('/dashboard');
-    } else if (email === TEST_CREDENTIALS.applicant.email && password === TEST_CREDENTIALS.applicant.password) {
-      document.cookie = `auth=true; path=/; max-age=86400; samesite=strict`;
-      document.cookie = `userRole=applicant; path=/; max-age=86400; samesite=strict`;
-      setIsAuthenticated(true);
-      setUserRole('applicant');
-      router.push('/applicant-dashboard');
-    } else {
+      setUserRole(data.user.type);
+      setUser({
+        id: data.user.id,
+        email: data.user.email,
+        userType: data.user.type
+      });
+
+      // Store auth state
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userRole', data.user.type);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Redirect based on user type
+      if (data.user.type === 'lender') {
+        router.push('/lender-dashboard');
+      } else {
+        router.push('/applicant-dashboard');
+      }
+
+    } catch (error) {
+      console.error('Login error:', error);
       throw new Error('Invalid credentials');
     }
   };
 
   const logout = useCallback(async () => {
     try {
-      document.cookie = 'auth=; path=/healthera_ai; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=strict';
-      document.cookie = 'userRole=; path=/healthera_ai; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=strict';
+      if (!isDevelopment) {
+        // Call logout API in production
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+      }
+
+      // Clear auth state
       setIsAuthenticated(false);
       setUserRole(null);
-      window.location.href = '/healthera_ai';
-      sessionStorage.clear();
-      localStorage.clear();
+      setUser(null);
+      
+      // Clear localStorage
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('user');
+
+      // Redirect to home
+      router.push('/');
+      
     } catch (error) {
       console.error('Logout error:', error);
+      // Still clear local state even if API call fails
+      setIsAuthenticated(false);
+      setUserRole(null);
+      setUser(null);
+      localStorage.clear();
+      router.push('/');
     }
-  }, []);
+  }, [router, isDevelopment]);
+
+  // Middleware for protected routes
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (!isAuthenticated) {
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('dashboard')) {
+          router.push('/');
+        }
+      }
+    };
+
+    checkAuth();
+  }, [isAuthenticated, router]);
+
+  const value = {
+    isAuthenticated,
+    userRole,
+    user,
+    login,
+    logout
+  };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userRole, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}
