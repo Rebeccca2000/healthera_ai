@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
   },
   // Add these two important configurations
   assetPrefix: '/healthera_ai/',
+  // Add this to handle API routes in development
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:3000/api/:path*'
+      }
+    ]
+  },
   trailingSlash: true,
   // Disable the experimental app directory since we're deploying to GitHub Pages
   reactStrictMode: true,
