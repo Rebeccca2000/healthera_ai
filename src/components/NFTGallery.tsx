@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
 import NFTDetailsCard from '@/components/NFTDetailsCard';
 import { useRouter } from 'next/navigation';
-
+import { APP_CONFIG } from '@/config/urls';
 // Sample NFT data
 const sampleNFTs = [
   {
@@ -18,10 +18,10 @@ const sampleNFTs = [
     verifier: "MedEquip Certification",
     currentValue: "25,000",
     lastVerified: "2024-01-15",
-    image: "/api/placeholder/400/300",
+    image: `${APP_CONFIG.apiUrl}/placeholder/400/300`,
     photos: [
-      "/api/placeholder/200/200",
-      "/api/placeholder/200/200",
+      `${APP_CONFIG.apiUrl}/placeholder/200/200`,
+      `${APP_CONFIG.apiUrl}/placeholder/200/200`
     ],
     riskScore: "85",
     history: [
@@ -40,10 +40,10 @@ const sampleNFTs = [
     verifier: "MedEquip Certification",
     currentValue: "15,000",
     lastVerified: "2024-01-20",
-    image: "/api/placeholder/400/300",
+    image: `${APP_CONFIG.apiUrl}/placeholder/400/300`,
     photos: [
-      "/api/placeholder/200/200",
-      "/api/placeholder/200/200",
+      `${APP_CONFIG.apiUrl}/placeholder/200/200`,
+      `${APP_CONFIG.apiUrl}/placeholder/200/200`
     ],
     riskScore: "90",
     history: [
@@ -61,7 +61,7 @@ const NFTGallery = () => {
       {/* Add Equipment Button */}
       <div className="flex justify-end">
         <Button 
-          onClick={() => router.push('/applicant-dashboard/mint-nft')}
+          onClick={() => router.push(`${APP_CONFIG.baseUrl}/applicant-dashboard/mint-nft`)}
           className="bg-purple-600 hover:bg-purple-700"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -86,7 +86,7 @@ const NFTGallery = () => {
             </p>
             <Button 
               className="mt-4 bg-purple-600 hover:bg-purple-700"
-              onClick={() => router.push('/applicant-dashboard/mint-nft')}
+              onClick={() => router.push(`${APP_CONFIG.baseUrl}/applicant-dashboard/mint-nft`)}
             >
               Add Equipment
             </Button>

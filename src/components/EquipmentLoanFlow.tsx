@@ -1,18 +1,42 @@
+// src/components/EquipmentLoanFlow.tsx
 import React, { useState, useCallback } from 'react';
 import { Camera, Upload, Shield, DollarSign, Calculator, FileCheck, AlertTriangle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { 
   Dialog,
   DialogContent,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
+  DialogTrigger,
 } from "@/components/ui/dialog";
+import { APP_CONFIG } from '@/config/urls';
 
-const EquipmentLoanFlow = () => {
+// Type definitions
+type ViewType = 'frontView' | 'sideView';
+
+interface EquipmentData {
+  name: string;
+  type: string;
+  manufacturer: string;
+  serialNumber: string;
+  purchasePrice: string;
+  condition: 'new' | 'refurbished' | 'used';
+  frontView: string | null;
+  sideView: string | null;
+}
+
+interface LoanTerms {
+  amount: string;
+  duration: string;
+  interestRate: string;
+  monthlyPayment: string;
+}
+
+const EquipmentLoanFlow: React.FC = () => {
   const [step, setStep] = useState(1);
-  const [equipmentData, setEquipmentData] = useState({
+  const [equipmentData, setEquipmentData] = useState<EquipmentData>({
     name: '',
     type: '',
     manufacturer: '',
@@ -23,31 +47,43 @@ const EquipmentLoanFlow = () => {
     sideView: null
   });
 
-  const [nftStatus, setNftStatus] = useState({
-    tokenCreated: false,
-    verificationComplete: false,
-    collateralAssessed: false
-  });
-
-  const [loanTerms, setLoanTerms] = useState({
+  const [loanTerms, setLoanTerms] = useState<LoanTerms>({
     amount: '',
     duration: '12',
-    interestRate: '',
+    interestRate: '6.99',
     monthlyPayment: ''
   });
 
   // Handle image upload
-  const handleImageUpload = (view, file) => {
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setEquipmentData(prev => ({
-          ...prev,
-          [view]: e.target.result
-        }));
-      };
-      reader.readAsDataURL(file);
+  const handleImageUpload = (view: ViewType, file: File | null) => {
+    if (!file) {
+      setEquipmentData(prev => ({
+        ...prev,
+        [view]: null
+      }));
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      const result = e.target?.result;
+      if (!result) return;
+      
+      setEquipmentData(prev => ({
+        ...prev,
+        [view]: result as string
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle form input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEquipmentData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   // Calculate loan payments
@@ -65,12 +101,19 @@ const EquipmentLoanFlow = () => {
     }
   }, [loanTerms.amount, loanTerms.interestRate, loanTerms.duration]);
 
+  const isStepOneValid = () => {
+    return equipmentData.name !== '' && 
+           equipmentData.type !== '' && 
+           equipmentData.frontView !== null && 
+           equipmentData.sideView !== null;
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-4">
       {/* Progress Steps */}
       <div className="flex justify-between mb-8">
-        {['Equipment Details', 'NFT Creation', 'Loan Terms', 'Final Review'].map((label, index) => (
-          <div key={label} className="flex flex-col items-center w-1/4">
+        {['Equipment Details', 'Loan Terms', 'Final Review'].map((label, index) => (
+          <div key={label} className="flex flex-col items-center w-1/3">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 
               ${step > index + 1 ? 'bg-green-500' : step === index + 1 ? 'bg-purple-600' : 'bg-gray-700'}`}>
               {step > index + 1 ? '✓' : index + 1}
@@ -80,7 +123,7 @@ const EquipmentLoanFlow = () => {
         ))}
       </div>
 
-      {/* Equipment Details Step */}
+      {/* Step 1: Equipment Details */}
       {step === 1 && (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
@@ -95,18 +138,19 @@ const EquipmentLoanFlow = () => {
                 <label className="block text-sm text-gray-400 mb-1">Equipment Name</label>
                 <input
                   type="text"
+                  name="name"
                   className="w-full bg-gray-700 border-gray-600 rounded-lg p-2"
-                  placeholder="e.g. Medical Scanner XR-500"
                   value={equipmentData.name}
-                  onChange={(e) => setEquipmentData({...equipmentData, name: e.target.value})}
+                  onChange={handleInputChange}
                 />
               </div>
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Equipment Type</label>
                 <select 
+                  name="type"
                   className="w-full bg-gray-700 border-gray-600 rounded-lg p-2"
                   value={equipmentData.type}
-                  onChange={(e) => setEquipmentData({...equipmentData, type: e.target.value})}
+                  onChange={handleInputChange}
                 >
                   <option value="">Select Type</option>
                   <option value="diagnostic">Diagnostic Equipment</option>
@@ -117,9 +161,10 @@ const EquipmentLoanFlow = () => {
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Condition</label>
                 <select 
+                  name="condition"
                   className="w-full bg-gray-700 border-gray-600 rounded-lg p-2"
                   value={equipmentData.condition}
-                  onChange={(e) => setEquipmentData({...equipmentData, condition: e.target.value})}
+                  onChange={handleInputChange}
                 >
                   <option value="new">New</option>
                   <option value="refurbished">Refurbished</option>
@@ -128,16 +173,19 @@ const EquipmentLoanFlow = () => {
               </div>
             </div>
 
+            {/* Image Upload Section */}
             <div className="mb-6">
-              <label className="block text-sm text-gray-400 mb-1">Equipment Photos</label>
+              <label className="block text-sm text-gray-400 mb-2">Equipment Photos</label>
               <div className="grid grid-cols-2 gap-4">
                 {/* Front View Upload */}
                 <div className="relative">
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
-                    onChange={(e) => handleImageUpload('frontView', e.target.files[0])}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      const file = e.target.files ? e.target.files[0] : null;
+                      handleImageUpload('frontView', file);
+                    }}
                     className="hidden"
                     id="frontView"
                   />
@@ -165,8 +213,10 @@ const EquipmentLoanFlow = () => {
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
-                    onChange={(e) => handleImageUpload('sideView', e.target.files[0])}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      const file = e.target.files ? e.target.files[0] : null;
+                      handleImageUpload('sideView', file);
+                    }}
                     className="hidden"
                     id="sideView"
                   />
@@ -191,27 +241,25 @@ const EquipmentLoanFlow = () => {
               </div>
             </div>
 
-            <Alert className="bg-purple-900/50 border border-purple-500 mb-6">
+            <Alert className="bg-purple-900/50 border border-purple-500">
               <AlertTriangle className="h-5 w-5 text-purple-400" />
               <AlertDescription>
-                Equipment details will be verified with the manufacturer before NFT creation.
+                Equipment details will be verified with the manufacturer before loan approval.
                 This process typically takes 1-2 business days.
               </AlertDescription>
             </Alert>
 
-            <div className="flex justify-end">
-              <button
-                onClick={() => setStep(2)}
-                disabled={!equipmentData.name || !equipmentData.type || !equipmentData.frontView || !equipmentData.sideView}
-                className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Continue to NFT Creation
-              </button>
-            </div>
+            <Button 
+              className="w-full bg-purple-600 hover:bg-purple-700 mt-6"
+              onClick={() => setStep(2)}
+              disabled={!isStepOneValid()}
+            >
+              Continue to Loan Terms
+            </Button>
           </CardContent>
         </Card>
       )}
-
+      
       {/* NFT Creation Step */}
       {step === 2 && (
         <Card className="bg-gray-800 border-gray-700">
@@ -476,7 +524,7 @@ const EquipmentLoanFlow = () => {
                           className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700"
                           onClick={() => {
                             // Redirect to the correct dashboard URL
-                            window.location.href = 'https://rebeccca2000.github.io/healthera_ai/applicant-dashboard/';
+                            window.location.href = `${APP_CONFIG.baseUrl}/applicant-dashboard/`;
                           }}
                         >
                           Return to Dashboard

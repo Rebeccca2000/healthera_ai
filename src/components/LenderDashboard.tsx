@@ -1,21 +1,83 @@
 "use client";  // This must be the first line
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, FileText, CheckCircle, BarChart, DollarSign, Globe, TrendingUp, CircleDollarSign, Coins } from 'lucide-react';
+import { Home, FileText, CheckCircle, BarChart, DollarSign, Globe, TrendingUp, CircleDollarSign, Coins, Package } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import LoanDetailsModal from './LoanDetailsModal';  // Add this at the top
-import { LoanRequest } from './types';  // Adjust the path as needed
+import LoanDetailsModal from './LoanDetailsModal';
+import { LoanRequest } from './types';
 import { useAuth } from '@/contexts/AuthContext';
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Package } from 'lucide-react';
 import NFTDetailsCard from './NFTDetailsCard';
 import TokenTreasury from './TokenTreasury';
+import { APP_CONFIG } from '@/config/urls';
+// Type definitions
+interface NFTDetails {
+  name: string;
+  tokenId: string;
+  status: string;
+  manufacturer: string;
+  serialNumber: string;
+  purchaseDate: string;
+  verifier: string;
+  currentValue: string;
+  lastVerified: string;
+  image: string;
+  photos: string[];
+  riskScore: string;
+  history: Array<{
+    action: string;
+    date: string;
+    type: string;
+  }>;
+}
 
-// Add this component definition before the Dashboard component
-const NFTViewerDialog = ({ requestId }: { requestId: number }) => {
+interface NFTsByRequest {
+  [key: number]: Array<NFTDetails>;
+}
+
+type LoanStatus = 'APPROVED' | 'PENDING' | 'REJECTED' | 'UNDER REVIEW';
+
+interface StatusBadgeProps {
+  status: LoanStatus | string;
+}
+
+interface ApprovedLoan {
+  id: number;
+  amount: number;
+  purpose: string;
+  duration: number;
+  dateRequested: string;
+  status: LoanStatus;
+  riskScore: number;
+}
+
+// NFTViewerDialog Component
+interface NFTViewerDialogProps {
+  requestId: number;
+}
+interface RiskScoreProps {
+  score: number;
+}
+
+const RiskScore: React.FC<RiskScoreProps> = ({ score }) => {
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-400';
+    if (score >= 60) return 'text-yellow-400';
+    return 'text-red-400';
+  };
+
+  return (
+    <div className={`flex items-center ${getScoreColor(score)}`}>
+      <TrendingUp className="h-4 w-4 mr-1" />
+      <span>{score}</span>
+    </div>
+  );
+};
+
+const NFTViewerDialog: React.FC<NFTViewerDialogProps> = ({ requestId }) => {
   // Mock NFT data mapped by request ID
-  const nftsByRequest = {
+  const nftsByRequest: NFTsByRequest = {
     3669: [{
       name: "Dental X-Ray Machine",
       tokenId: "HER-123456",
@@ -26,8 +88,8 @@ const NFTViewerDialog = ({ requestId }: { requestId: number }) => {
       verifier: "MedEquip Certification",
       currentValue: "25,000",
       lastVerified: "2024-01-15",
-      image: "/api/placeholder/400/300",
-      photos: ["/api/placeholder/200/200", "/api/placeholder/200/200"],
+      image: `${APP_CONFIG.apiUrl}/placeholder/400/300`,
+      photos: [`${APP_CONFIG.apiUrl}/placeholder/200/200`, `${APP_CONFIG.apiUrl}/placeholder/200/200`],
       riskScore: "85",
       history: [
         { action: "NFT Created", date: "2024-01-15", type: "Creation" },
@@ -63,6 +125,24 @@ const NFTViewerDialog = ({ requestId }: { requestId: number }) => {
         </div>
       </DialogContent>
     </Dialog>
+  );
+};
+// Status Badge Component
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
+  const getStatusColor = (status: string): string => {
+    switch (status.toLowerCase()) {
+      case 'approved': return 'bg-green-500';
+      case 'pending': return 'bg-yellow-500';
+      case 'rejected': return 'bg-red-500';
+      case 'under review': return 'bg-blue-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  return (
+    <span className={`${getStatusColor(status)} px-2 py-1 rounded-full text-xs font-medium uppercase`}>
+      {status}
+    </span>
   );
 };
 
@@ -118,26 +198,67 @@ const Dashboard = () => {
 	};
 
   const [loanRequests, setLoanRequests] = useState<LoanRequest[]>([
-		{
-			id: 3669,
-			amount: 3669,
-			purpose: "Equipment Finance",
-			duration: 24,
-			riskScore: 85,
-			riskLevel: "Medium Risk",
-			status: "Under Review",
-			documents: {
-				id: true,
-				bank: true,
-				medical: false
-			},
-			applicant: {  // Add this
-				name: "John Doe",
-				email: "john@example.com",
-				phone: "(555) 123-4567"
-			}
-		}
-	]);
+    {
+      id: 3669,
+      amount: 3669,
+      purpose: "Equipment Finance",
+      duration: 24,
+      riskScore: 85,
+      riskLevel: "Medium Risk",
+      status: "Under Review",
+      documents: {
+        id: true,
+        bank: true,
+        medical: false
+      },
+      applicant: {
+        name: "Dr. Johnson",
+        email: "applicant@healthera.ai",
+        phone: "(555) 123-4567"
+      },
+      businessDetails: {
+        tradingName: "Johnson Dental",
+        businessAddress: "123 Medical St",
+        mobile: "0412345678",
+        principalActivity: "Dental Practice",
+        yearsInBusiness: 5,
+        yearsSinceTrading: 5
+      },
+      entityDetails: {
+        type: "Individual",
+        firstName: "John",
+        lastName: "Johnson",
+        acnAbn: "12345678901",
+        trustName: "",
+        trustAbn: "",
+        trustType: ""
+      },
+      otherInfo: {
+        salesRepNumber: "SR-001",
+        deliveryDate: "2024-02-01",
+        mortgageAmount: 500000
+      },
+      personalIncome: {
+        grossSalary: 200000,
+        salaryAfterTax: 140000,
+        contractorIncome: 0,
+        investmentIncome: 20000,
+        otherIncome: 5000,
+        taxableIncome: 225000
+      },
+      businessIncome: {
+        revenue: 500000,
+        abn: "12345678901",
+        ebit: 150000,
+        addbacks: 20000
+      },
+      accountant: {
+        name: "Jane Smith",
+        phone: "(555) 987-6543",
+        email: "jane.smith@accounting.com"
+      }
+    }
+  ]);
   // Enhanced metrics data
   const metrics = {
     hltaBalance: "125,000.00",
@@ -159,7 +280,7 @@ const Dashboard = () => {
   ];
 
   // Enhanced approved loans data
-  const approvedLoans = [
+  const approvedLoans: ApprovedLoan[] = [
     {
       id: 1,
       amount: 3669,
@@ -180,36 +301,21 @@ const Dashboard = () => {
     }
   ];
 
-  const StatusBadge = ({ status }) => {
-    const getStatusColor = (status) => {
+  const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
+    const getStatusColor = (status: string): string => {
       switch (status.toLowerCase()) {
         case 'approved': return 'bg-green-500';
         case 'pending': return 'bg-yellow-500';
         case 'rejected': return 'bg-red-500';
+        case 'under review': return 'bg-blue-500';
         default: return 'bg-gray-500';
       }
     };
-
+  
     return (
       <span className={`${getStatusColor(status)} px-2 py-1 rounded-full text-xs font-medium uppercase`}>
         {status}
       </span>
-    );
-  };
-
-  // Risk Score Component
-  const RiskScore = ({ score }) => {
-    const getScoreColor = (score) => {
-      if (score >= 80) return 'text-green-400';
-      if (score >= 60) return 'text-yellow-400';
-      return 'text-red-400';
-    };
-
-    return (
-      <div className={`flex items-center ${getScoreColor(score)}`}>
-        <TrendingUp className="h-4 w-4 mr-1" />
-        <span>{score}</span>
-      </div>
     );
   };
 
@@ -269,7 +375,7 @@ const Dashboard = () => {
 						className="flex items-center space-x-3 bg-gray-800 p-2 rounded-lg hover:bg-gray-700"
 					>
 						<Image 
-							src="/healthera_ai/api/placeholder/40/40"
+							src={`${APP_CONFIG.baseUrl}/api/placeholder/40/40`}
 							alt="Profile"
 							width={40}
 							height={40}
@@ -555,5 +661,6 @@ const Dashboard = () => {
     </div>
   );
 };
+
 
 export default Dashboard;

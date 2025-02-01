@@ -1,4 +1,6 @@
 // src/components/ApplicantDashboard.tsx
+'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,12 +12,13 @@ import ApplicantLoansManager from '@/components/ApplicantLoansManager';
 import NFTMintingFlow from '@/components/NFTMintingFlow';
 import LoanApplicationFlow from '@/components/LoanApplicationFlow';
 import NFTGallery from '@/components/NFTGallery';
+import { APP_CONFIG } from '@/config/urls';
 
-const ApplicantDashboard = () => {
+const ApplicantDashboard: React.FC = () => {
   const router = useRouter();  // Add this line before other state declarations
   const [activeTab, setActiveTab] = useState('home');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -107,7 +110,7 @@ const ApplicantDashboard = () => {
               className="flex items-center space-x-3 bg-gray-800 p-2 rounded-lg hover:bg-gray-700"
             >
               <Image 
-                src="/healthera_ai/api/placeholder/40/40"
+                src={`${APP_CONFIG.baseUrl}/api/placeholder/40/40`}
                 alt="Profile"
                 width={40}
                 height={40}

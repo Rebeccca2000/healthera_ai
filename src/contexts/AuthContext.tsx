@@ -1,17 +1,26 @@
 // src/contexts/AuthContext.tsx
 'use client';
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { APP_CONFIG } from '@/config/urls';
 
-// Demo credentials for development
-const TEST_CREDENTIALS = {
-  lender: {
-    email: 'lender@healthera.ai',
-    password: 'lender0101'
+// Add type for credentials
+type TestCredentials = {
+  [key: string]: {
+    password: string;
+    type: string;
+  }
+};
+
+const TEST_CREDENTIALS: TestCredentials = {
+  'lender@healthera.ai': {
+    password: 'lender0101',
+    type: 'lender'
   },
-  applicant: {
-    email: 'applicant@healthera.ai',
-    password: 'applicant0101'
+  'applicant@healthera.ai': {
+    password: 'applicant0101',
+    type: 'applicant'
   }
 };
 
@@ -19,6 +28,7 @@ interface User {
   id: string;
   email: string;
   userType: 'lender' | 'applicant';
+  type?: string;
 }
 
 interface AuthContextType {
@@ -26,76 +36,48 @@ interface AuthContextType {
   userRole: string | null;
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const router = useRouter();
+const isDevelopment = process.env.NODE_ENV === 'development';
 
-  // Function to check if we're in development mode
-  const isDevelopment = process.env.NODE_ENV === 'development';
-
-  // Initialize auth state from localStorage
-  useEffect(() => {
-    const storedAuth = localStorage.getItem('isAuthenticated');
-    const storedRole = localStorage.getItem('userRole');
-    const storedUser = localStorage.getItem('user');
-    
-    if (storedAuth === 'true' && storedRole) {
-      setIsAuthenticated(true);
-      setUserRole(storedRole);
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+const getInitialAuthState = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      const storedAuth = localStorage.getItem('isAuthenticated');
+      const storedRole = localStorage.getItem('userRole');
+      const storedUser = localStorage.getItem('user');
+      
+      if (storedAuth === 'true' && storedRole) {
+        return {
+          isAuthenticated: true,
+          userRole: storedRole,
+          user: storedUser ? JSON.parse(storedUser) : null
+        };
       }
+    } catch (error) {
+      console.error('Error restoring auth state:', error);
     }
-  }, []);
+  }
+  return {
+    isAuthenticated: false,
+    userRole: null,
+    user: null
+  };
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const initialState = getInitialAuthState();
+  const [isAuthenticated, setIsAuthenticated] = useState(initialState.isAuthenticated);
+  const [userRole, setUserRole] = useState<string | null>(initialState.userRole);
+  const [user, setUser] = useState<User | null>(initialState.user);
+  const router = useRouter();
 
   const login = async (email: string, password: string) => {
     try {
-      // For development, use test credentials
-      if (isDevelopment) {
-        if (email === TEST_CREDENTIALS.lender.email && 
-            password === TEST_CREDENTIALS.lender.password) {
-          setIsAuthenticated(true);
-          setUserRole('lender');
-          const demoUser = {
-            id: '1',
-            email: TEST_CREDENTIALS.lender.email,
-            userType: 'lender' as const
-          };
-          setUser(demoUser);
-          localStorage.setItem('isAuthenticated', 'true');
-          localStorage.setItem('userRole', 'lender');
-          localStorage.setItem('user', JSON.stringify(demoUser));
-          router.push('/lender-dashboard');
-          return;
-        } 
-        
-        if (email === TEST_CREDENTIALS.applicant.email && 
-            password === TEST_CREDENTIALS.applicant.password) {
-          setIsAuthenticated(true);
-          setUserRole('applicant');
-          const demoUser = {
-            id: '2',
-            email: TEST_CREDENTIALS.applicant.email,
-            userType: 'applicant' as const
-          };
-          setUser(demoUser);
-          localStorage.setItem('isAuthenticated', 'true');
-          localStorage.setItem('userRole', 'applicant');
-          localStorage.setItem('user', JSON.stringify(demoUser));
-          router.push('/applicant-dashboard');
-          return;
-        }
-      }
-
-      // For production, use the API
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${APP_CONFIG.baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,104 +87,81 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+        throw new Error(error.error || 'Login failed');
       }
 
       const data = await response.json();
       
       setIsAuthenticated(true);
       setUserRole(data.user.type);
-      setUser({
-        id: data.user.id,
-        email: data.user.email,
-        userType: data.user.type
-      });
+      setUser(data.user);
 
-      // Store auth state
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('userRole', data.user.type);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      // Redirect based on user type
-      if (data.user.type === 'lender') {
-        router.push('/lender-dashboard');
-      } else {
-        router.push('/applicant-dashboard');
-      }
-
+      router.push(userRole === 'lender' ? '/lender-dashboard' : '/applicant-dashboard');
     } catch (error) {
       console.error('Login error:', error);
-      throw new Error('Invalid credentials');
+      throw error;
     }
   };
 
   const logout = useCallback(async () => {
     try {
       if (!isDevelopment) {
-        // Call logout API in production
-        await fetch('/api/auth/logout', {
+        await fetch(`${APP_CONFIG.baseUrl}/api/auth/logout`, {
           method: 'POST',
           credentials: 'include'
         });
       }
 
-      // Clear auth state
-      setIsAuthenticated(false);
-      setUserRole(null);
-      setUser(null);
-      
-      // Clear localStorage
-      localStorage.removeItem('isAuthenticated');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('user');
-
-      // Redirect to home
-      router.push('/');
-      
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Still clear local state even if API call fails
       setIsAuthenticated(false);
       setUserRole(null);
       setUser(null);
       localStorage.clear();
-      router.push('/');
+      router.push(`${APP_CONFIG.baseUrl}/`);
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still clear state on error
+      setIsAuthenticated(false);
+      setUserRole(null);
+      setUser(null);
+      localStorage.clear();
+      router.push(`${APP_CONFIG.baseUrl}/`);
     }
-  }, [router, isDevelopment]);
+  }, [router]);
 
-  // Middleware for protected routes
+  // Route protection
   useEffect(() => {
-    const checkAuth = async () => {
-      if (!isAuthenticated) {
-        const currentPath = window.location.pathname;
-        if (currentPath.includes('dashboard')) {
-          router.push('/');
-        }
+    if (!isAuthenticated) {
+      const currentPath = window.location.pathname;
+      if (currentPath.includes('dashboard')) {
+        router.push(`${APP_CONFIG.baseUrl}/`);
       }
-    };
-
-    checkAuth();
+    }
   }, [isAuthenticated, router]);
 
-  const value = {
-    isAuthenticated,
-    userRole,
-    user,
-    login,
-    logout
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{
+      isAuthenticated,
+      userRole,
+      user,
+      login,
+      logout
+    }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }
+
+export default AuthContext;

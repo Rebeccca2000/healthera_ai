@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { APP_CONFIG } from '@/config/urls';
 import { 
   Package,  
   Calculator, 
@@ -19,6 +20,7 @@ import {
   DialogClose, 
   DialogTrigger 
 } from "@/components/ui/dialog";
+import Image from 'next/image';
 
 interface NFT {
   id: number;
@@ -31,8 +33,6 @@ interface NFT {
   image: string;
   verificationDate: string;
 }
-
-
 
 const LoanApplicationFlow: React.FC = () => {
   const { user } = useAuth();
@@ -57,7 +57,7 @@ const LoanApplicationFlow: React.FC = () => {
       condition: 'New',
       value: 25000,
       status: 'Available',
-      image: '/api/placeholder/400/300',
+      image: `${APP_CONFIG.apiUrl}/placeholder/400/300`,
       verificationDate: '2024-01-15'
     },
     {
@@ -68,7 +68,7 @@ const LoanApplicationFlow: React.FC = () => {
       condition: 'New',
       value: 15000,
       status: 'Available',
-      image: '/api/placeholder/400/300',
+      image: `${APP_CONFIG.apiUrl}/placeholder/400/300`,
       verificationDate: '2024-01-20'
     }
   ];
@@ -101,7 +101,7 @@ const LoanApplicationFlow: React.FC = () => {
         }
       };
 
-      const response = await fetch('/api/loans', {
+      const response = await fetch(`${APP_CONFIG.apiUrl}/loans`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(loanData)
@@ -157,10 +157,12 @@ const LoanApplicationFlow: React.FC = () => {
                     onClick={() => setSelectedNFT(nft)}
                   >
                     <div className="flex items-start gap-4">
-                      <img 
+                      <Image 
                         src={nft.image} 
                         alt={nft.name}
-                        className="w-24 h-24 rounded-lg object-cover"
+                        width={96}
+                        height={96}
+                        className="rounded-lg object-cover"
                       />
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
@@ -298,7 +300,7 @@ const LoanApplicationFlow: React.FC = () => {
               <Alert className="bg-purple-900/50 border border-purple-500">
                 <AlertTriangle className="h-5 w-5 text-purple-400" />
                 <AlertDescription>
-                  Loan amount cannot exceed {selectedNFT?.value ? `$${selectedNFT.value.toLocaleString()}` : '0'} based on the NFT's verified value.
+                  Loan amount cannot exceed {selectedNFT?.value ? `$${selectedNFT.value.toLocaleString()}` : '0'} based on the NFT&apos;s verified value.
                 </AlertDescription>
               </Alert>
 

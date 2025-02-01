@@ -1,6 +1,6 @@
 // src/components/LandingPage.tsx
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -9,31 +9,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Lock, Mail, AlertCircle } from 'lucide-react';
 
+
+const scrollToSection = (sectionId: string) => {
+  const element = document.getElementById(sectionId);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
+
 const LandingPage = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [activeRole, setActiveRole] = useState('lender');
+  const [activeTab, setActiveTab] = useState('lender');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login, isAuthenticated } = useAuth();
-  const router = useRouter();
-
-  // If user is already authenticated, redirect them
-  useEffect(() => {
-    if (isAuthenticated) {
-      const userRole = localStorage.getItem('userRole');
-      if (userRole === 'lender') {
-        router.push('/lender-dashboard');
-      } else if (userRole === 'applicant') {
-        router.push('/applicant-dashboard');
-      }
-    }
-  }, [isAuthenticated, router]);
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,14 +38,8 @@ const LandingPage = () => {
     try {
       await login(email, password);
     } catch (err) {
+      console.error('Login error:', err);
       setError('Invalid credentials. Please try again.');
-    }
-  };
-
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -163,129 +153,123 @@ const LandingPage = () => {
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-white">Login to Healthera.AI</DialogTitle>
           </DialogHeader>
-          <Tabs defaultValue="lender" className="w-full">
+
+          <Tabs value={activeTab} defaultValue="lender" className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-gray-700">
               <TabsTrigger 
                 value="lender"
-                onClick={() => setActiveRole('lender')}
+                onClick={() => setActiveTab('lender')}
                 className="data-[state=active]:bg-purple-600"
               >
                 Lender Login
               </TabsTrigger>
               <TabsTrigger 
                 value="applicant"
-                onClick={() => setActiveRole('applicant')}
+                onClick={() => setActiveTab('applicant')}
                 className="data-[state=active]:bg-purple-600"
               >
                 Applicant Login
               </TabsTrigger>
             </TabsList>
 
-            {/* Lender Login Form */}
-            <TabsContent value="lender">
-              <form onSubmit={handleLogin} className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                    <Input
-                      type="email"
-                      placeholder="lender@healthera.ai"
-                      className="pl-10 bg-gray-700 border-gray-600"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                    <Input
-                      type="password"
-                      placeholder="Password"
-                      className="pl-10 bg-gray-700 border-gray-600"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
+            <form onSubmit={handleLogin} className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Input
+                    type="email"
+                    placeholder={`${activeTab}@healthera.ai`}
+                    className="pl-10 bg-gray-700 border-gray-600"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
-
-                {error && (
-                  <div className="bg-red-900/50 border border-red-500 rounded-lg p-3 flex items-center space-x-2">
-                    <AlertCircle className="h-5 w-5 text-red-500" />
-                    <p className="text-sm text-red-500">{error}</p>
-                  </div>
-                )}
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-purple-600 hover:bg-purple-700"
-                >
-                  Login as Lender
-                </Button>
-              </form>
-            </TabsContent>
-
-            {/* Applicant Login Form */}
-            <TabsContent value="applicant">
-              <form onSubmit={handleLogin} className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                    <Input
-                      type="email"
-                      placeholder="applicant@healthera.ai"
-                      className="pl-10 bg-gray-700 border-gray-600"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                    <Input
-                      type="password"
-                      placeholder="Password"
-                      className="pl-10 bg-gray-700 border-gray-600"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    className="pl-10 bg-gray-700 border-gray-600"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
                 </div>
+              </div>
 
-                {error && (
-                  <div className="bg-red-900/50 border border-red-500 rounded-lg p-3 flex items-center space-x-2">
-                    <AlertCircle className="h-5 w-5 text-red-500" />
-                    <p className="text-sm text-red-500">{error}</p>
-                  </div>
-                )}
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-purple-600 hover:bg-purple-700"
-                >
-                  Login as Applicant
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-
-          <div className="mt-4 text-center">
-            <p className="text-sm text-gray-400">
-              Demo Credentials:
-            </p>
-            <div className="mt-2 text-xs text-gray-500">
-              {activeRole === 'lender' ? (
-                <>
-                  Email: lender@healthera.ai<br />
-                  Password: lender0101
-                </>
-              ) : (
-                <>
-                  Email: applicant@healthera.ai<br />
-                  Password: applicant0101
-                </>
+              {error && (
+                <div className="bg-red-900/50 border border-red-500 rounded-lg p-3 flex items-center space-x-2">
+                  <AlertCircle className="h-5 w-5 text-red-500" />
+                  <p className="text-sm text-red-500">{error}</p>
+                </div>
               )}
-            </div>
-          </div>
+
+              <Button 
+                type="submit" 
+                className="w-full bg-purple-600 hover:bg-purple-700"
+              >
+                Login as {activeTab === 'lender' ? 'Lender' : 'Applicant'}
+              </Button>
+
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-400">Demo Credentials:</p>
+                <div className="mt-2 text-xs text-gray-500">
+                  Email: {activeTab}@healthera.ai<br />
+                  Password: {activeTab}0101
+                </div>
+              </div>
+            </form>
+          </Tabs>
         </DialogContent>
       </Dialog>
+
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-16 flex flex-col items-center justify-center min-h-screen text-center px-4">
+        <h1 className="text-6xl font-bold mb-6">
+          <span className="text-gray-300">Healthcare Finance, </span>
+          <span className="text-purple-500">Reimagined</span>
+        </h1>
+        <p className="text-gray-400 text-xl max-w-3xl mb-12">
+          Revolutionizing medical equipment financing with blockchain technology. Secure,
+          transparent, and efficient funding solutions for healthcare providers.
+        </p>
+        <button
+          onClick={() => setIsLoginOpen(true)}
+          className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg text-lg"
+        >
+          Get Started
+        </button>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-gray-800">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-4xl font-bold text-center mb-12">
+            <span className="text-gray-300">Why Choose </span>
+            <span className="text-purple-500">Healthera.AI</span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                title: "Secure NFT Collateral",
+                description: "Transform your medical equipment into digital assets with our NFT technology."
+              },
+              {
+                title: "Fast Approval Process",
+                description: "Get your loan approved quickly with our streamlined application process."
+              },
+              {
+                title: "Competitive Rates",
+                description: "Benefit from our competitive interest rates and flexible repayment terms."
+              }
+            ].map((feature, index) => (
+              <div key={index} className="bg-gray-700 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold text-white mb-3">{feature.title}</h3>
+                <p className="text-gray-400">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

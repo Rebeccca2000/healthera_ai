@@ -9,7 +9,7 @@
     "lint": "next lint",
     "predeploy": "npm run build",
     "export": "next export",
-    "deploy": "next build && touch out/.nojekyll && gh-pages -d out -t true"
+    "deploy": "next build && next export && touch out/.nojekyll && gh-pages -d out -t true"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.1",
@@ -41,11 +41,14 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
+    "cookies": "^0.9.1",
+    "date-fns": "^4.1.0",
     "lucide-react": "^0.468.0",
     "next": "15.1.0",
     "next-auth": "^4.24.11",
     "pg": "^8.13.1",
     "react": "^19.0.0",
+    "react-day-picker": "^9.5.1",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.0",
     "tailwind-merge": "^2.5.5"

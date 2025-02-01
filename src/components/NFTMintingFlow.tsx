@@ -1,11 +1,11 @@
 'use client';
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Camera, Upload, Shield, AlertTriangle, CheckCircle, ArrowRight } from 'lucide-react';
+import { mintNFT } from '@/services/apiClient';
 
 interface EquipmentData {
   name: string;
@@ -58,8 +58,8 @@ const NFTMintingFlow: React.FC = () => {
   const handleMintNFT = async () => {
     try {
       setMintingStatus('processing');
-
-      const nftData = {
+      
+      await mintNFT({
         userId: user?.id,
         equipmentName: equipmentData.name,
         equipmentType: equipmentData.type,
@@ -68,25 +68,13 @@ const NFTMintingFlow: React.FC = () => {
           frontView: equipmentData.frontView,
           sideView: equipmentData.sideView
         }
-      };
-
-      const response = await fetch('/api/nfts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nftData)
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to mint NFT');
-      }
-
-      await response.json();
+  
       setMintingStatus('success');
       setStep(3);
     } catch (error) {
       console.error('Error minting NFT:', error);
       setMintingStatus('error');
-      // TODO: Add error alert component
     }
   };
 
@@ -213,7 +201,7 @@ const NFTMintingFlow: React.FC = () => {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleImageUpload('sideView', e.target.files[0])}
+                      onChange={(e) => handleImageUpload('sideView', e.target.files?.[0] || null)}
                       className="hidden"
                       id="sideView"
                     />
